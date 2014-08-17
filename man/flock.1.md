@@ -4,6 +4,7 @@ flock(1) -- lock file during command
 ## SYNOPSIS
 
 `flock` [`-suno`] [`-w` secs] <file> <command> [<argument> ...]
+
 `flock` [`-suno`] [`-w` secs] <file-descriptor-number>
 
 ## DESCRIPTION
