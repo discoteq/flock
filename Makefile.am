@@ -1,3 +1,22 @@
+# you probably want one of the following tasks:
+# - all
+# - install
+# - pkg
+# - doc
+# - test
+
+# utilities
+RONN=ronn
+RONN_FLAGS=\
+	--manual="User Commands" \
+	--organization=dicoteq \
+	--date=2014-07-17
+OPEN=open
+GIT=git
+CPIO=cpio
+LINT=splint
+LINT_FLAGS=+posixlib
+
 AM_CPPFLAGS = \
 	-include config.h \
 	-I$(top_srcdir)/include \
@@ -30,7 +49,6 @@ RCS_FIND_IGNORE = \( -o -name .git \) -prune -o
 
 ACLOCAL_AMFLAGS = -I m4
 
-# dist_noinst_HEADERS =
 bin_PROGRAMS = flock
 flock_SOURCES = src/flock.c
 flock_LDADD = $(LDADD)
@@ -45,17 +63,8 @@ distclean-local:
 	-rm -rf config
 	-rm -rf m4
 
-SPLINT_FLAGS=+posixlib
 lint:
-	splint $(SPLINT_FLAGS) src/flock.c
-
-RONN=ronn
-NROFF=nroff
-OPEN=open
-RONN_FLAGS=\
-	--manual="User Commands" \
-	--organization=dicoteq \
-	--date=2014-07-17
+	$(LINT) $(LINT_FLAGS) src/flock.c
 
 man_MANS = man/flock.1
 man/flock.1: man/flock.1.md man/index.txt
@@ -66,21 +75,21 @@ nroff-man: man/flock.1
 	$(NROFF) -man < man/flock.1
 html-man: man/flock.1.html
 	$(OPEN) man/flock.1.html
+doc: man/flock.1 man/flock.1.html
 
-check-test:
-	test/default.bats
+test: flock t/default.bats
+	t/default.bats
 
 PKGFILES=\
+	LICENSE.md \
+	Makefile.am \
+	README.md \
+	configure.ac \
 	man/flock.1 \
 	man/index.txt \
 	src/flock.c \
-	Makefile.am \
-	README \
-	t/default.bats \
-	configure.ac
+	t/default.bats
 
-GIT=git
-CPIO=cpio
 pkg: flock.cpio
 flock.cpio: $(PKGFILES)
 	$(GIT) ls-files | $(CPIO) -o > flock.cpio

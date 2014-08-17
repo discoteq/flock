@@ -12,7 +12,7 @@ dnl the compiler (like AC_PROG_LIBTOOL) to avoid autoconf errors.
 AC_USE_SYSTEM_EXTENSIONS
 AM_INIT_AUTOMAKE([-Wall -Wno-portability foreign 1.14 tar-pax no-dist-gzip dist-xz subdir-objects])
 AM_SILENT_RULES([yes])
-AC_CONFIG_SRCDIR([flock.c])
+AC_CONFIG_SRCDIR([src/flock.c])
 
 AC_PROG_CC_STDC
 AC_CANONICAL_HOST
