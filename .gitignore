@@ -18,3 +18,8 @@ man/flock.1
 man/flock.1.html
 *.o
 .dirstamp
+test-suite.log
+*.trs
+config.log test-suite.log
+flock-0.1.0.tar.xz
+*.bats.log

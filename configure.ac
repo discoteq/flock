@@ -13,7 +13,9 @@ AC_USE_SYSTEM_EXTENSIONS
 AM_INIT_AUTOMAKE([-Wall -Wno-portability foreign 1.14 tar-pax no-dist-gzip dist-xz subdir-objects])
 AM_SILENT_RULES([yes])
 AC_CONFIG_SRCDIR([src/flock.c])
+AC_REQUIRE_AUX_FILE([tap-driver.sh])
 
+AC_PROG_AWK
 AC_PROG_CC_STDC
 AC_CANONICAL_HOST
 AC_C_CONST
