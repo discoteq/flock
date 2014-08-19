@@ -10,6 +10,22 @@ To exclusively lock `/tmp/my.lock` while running the utility
 
 		flock /tmp/my.lock echo "hello, world!"
 
+## Installing
+
+Mac OS X Homebrew:
+
+    brew tap discoteq/discoteq
+    brew install flock
+
+From source:
+
+    wget https://github.com/discoteq/flock/releases/download/v0.1.1/flock-0.1.1.tar.xz
+    xz -dc flock-0.1.1.tar.xz | tar x
+    cd flock-0.1.1
+    ./configure
+    make
+    make install
+
 ## Wait, isn't there already a flock(1)?
 
 Yep, it's part of [util-linux](https://en.wikipedia.org/wiki/Util-linux).
