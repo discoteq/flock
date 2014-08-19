@@ -8,7 +8,7 @@ flock(1)
 To exclusively lock `/tmp/my.lock` while running the utility
 `echo "hello, world!"`:
 
-		flock /tmp/my.lock echo "hello, world!"
+    flock /tmp/my.lock echo "hello, world!"
 
 ## Installing
 
