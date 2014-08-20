@@ -68,13 +68,13 @@ LOCKFILE=`mktemp -t flock.XXXXXXXXXX`
 # -u forcebly releases lock
 @test "-u unlocks existing exclusive lock" {
 	${FLOCK} ${LOCKFILE} sleep 0.10 &
-	result=$(${FLOCK} -u ${LOCKFILE} echo run || echo err)
-	[ "$result" = run ]
+	result=$(${TIME} -p ${FLOCK} -u ${LOCKFILE} true 2>&1 | awk '/real/ {print $2}')
+	[ "$result" = 0.00 ]
 }
 @test "-u unlocks existing shared lock" {
 	${FLOCK} -s ${LOCKFILE} sleep 0.10 &
-	result=$(${FLOCK} -u ${LOCKFILE} echo run || echo err)
-	[ "$result" = run ]
+	result=$(${TIME} -p ${FLOCK} -u ${LOCKFILE} true 2>&1 | awk '/real/ {print $2}')
+	[ "$result" = 0.00 ]
 }
 
 # special file types
@@ -130,3 +130,14 @@ LOCKFILE=`mktemp -t flock.XXXXXXXXXX`
 	[ "$result" = 0.05 ]
 }
 
+@test "lock, then unlock on file descriptor" {
+	(
+		${FLOCK} -n 8 || exit 1
+		# commands executed under lock ...
+		sleep 0.05
+		${FLOCK} -u 8 || exit 1
+		sleep 0.05
+	) 8> ${LOCKFILE} &
+	result=$(${TIME} -p ${FLOCK} ${LOCKFILE} true 2>&1 | awk '/real/ {print $2}')
+	[ "$result" = 0.05 ]
+}
