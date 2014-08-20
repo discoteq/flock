@@ -17,76 +17,61 @@
 #include <stdbool.h>
 
 #ifndef HAVE_FLOCK
-/* lock operations for flock(2) */
-#define	LOCK_SH		0x01		/* shared file lock */
-#define	LOCK_EX		0x02		/* exclusive file lock */
-#define	LOCK_NB		0x04		/* don't block when locking */
-#define	LOCK_UN		0x08		/* unlock file */
-
-/* The following flock() emulation snarfed intact *) from the HP-UX
- * "BSD to HP-UX porting tricks" maintained by
- * system@alchemy.chem.utoronto.ca (System Admin (Mike Peterson))
- * from the version "last updated: 11-Jan-1993"
- * Snarfage done by Jarkko Hietaniemi <Jarkko.Hietaniemi@hut.fi>
- * *) well, almost, had to K&R the function entry, HPUX "cc"
- * does not grok ANSI function prototypes */
+// lock operations for flock(2)
+#define	LOCK_SH		0x01		// shared file lock
+#define	LOCK_EX		0x02		// exclusive file lock
+#define	LOCK_NB		0x04		// don't block when locking (must be ORed with LOCK_SH or LOCK_EX).
+#define	LOCK_UN		0x08		// unlock file
 
 /*
- * flock (fd, operation)
- *
- * This routine performs some file locking like the BSD 'flock'
+ * This function performs some file locking like the BSD 'flock'
  * on the object described by the int file descriptor 'fd',
  * which must already be open.
- *
- * The operations that are available are:
- *
- * LOCK_SH  -  get a shared lock.
- * LOCK_EX  -  get an exclusive lock.
- * LOCK_NB  -  don't block (must be ORed with LOCK_SH or LOCK_EX).
- * LOCK_UN  -  release a lock.
  *
  * Return value: 0 if lock successful, -1 if failed.
  *
  * Note that whether the locks are enforced or advisory is
  * controlled by the presence or absence of the SETGID bit on
  * the executable.
- *
- * Note that there is no difference between shared and exclusive
- * locks, since the 'lockf' system call in SYSV doesn't make any
- * distinction.
- *
- * The file "<sys/file.h>" should be modified to contain the definitions
- * of the available operations, which must be added manually (see below
- * for the values).
  */
 static int flock(int fd, int operation) {
-	int i;
+	struct flock fl;
+	int cmd = F_SETLKW;
+	int ret;
 
-	switch (operation) {
-	case LOCK_SH:		/* get a shared lock */
-	case LOCK_EX:		/* get an exclusive lock */
-		i = lockf (fd, F_LOCK, 0);
-		break;
+	// initialize the flock struct to set lock on entire file
+	fl.l_whence = 0;
+	fl.l_start = 0;
+	fl.l_len = 0;
+	fl.l_type = 0;
 
-	case LOCK_SH|LOCK_NB:	/* get a non-blocking shared lock */
-	case LOCK_EX|LOCK_NB:	/* get a non-blocking exclusive lock */
-		i = lockf (fd, F_TLOCK, 0);
-		if (i == -1)
-			if ((errno == EAGAIN) || (errno == EACCES))
-				errno = EWOULDBLOCK;
-		break;
-
-	case LOCK_UN:		/* unlock */
-		i = lockf (fd, F_ULOCK, 0);
-		break;
-
-	default:		/* can't decipher operation */
-		i = -1;
-		errno = EINVAL;
-		break;
+	// In non-blocking lock, use F_SETLK for cmd
+	if (operation & LOCK_NB) {
+		cmd = F_SETLK;
+		operation &= ~LOCK_NB;  // turn off this bit
 	}
 
-	return (i);
+	switch (operation) {
+	case LOCK_UN:
+		fl.l_type |= F_UNLCK;
+		break;
+	case LOCK_SH:
+		fl.l_type |= F_RDLCK;
+		break;
+	case LOCK_EX:
+		fl.l_type |= F_WRLCK;
+		break;
+	default:
+		errno = EINVAL;
+		return -1;
+	}
+
+	ret = fcntl(fd, cmd, &fl);
+
+	if (ret == -1 && errno == EACCES)
+		errno = EWOULDBLOCK;
+
+	return ret;
 }
 #endif
 
