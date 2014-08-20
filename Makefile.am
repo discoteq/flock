@@ -77,5 +77,5 @@ EXTRA_DIST=\
 
 TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
                   $(top_srcdir)/config/tap-driver.sh
-TESTS = t/default.bats t/fcntl.bats
+TESTS = t/default.bats t/smartos.bats
 EXTRA_DIST += $(TESTS)
