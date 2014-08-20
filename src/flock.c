@@ -145,7 +145,7 @@ int main(int argc, char *argv[]) {
 	progname = basename(argv[0]);
 
 	if (0 != atexit(close_stdout))
-		err(EXIT_FAILURE, "");
+		err(EX_OSERR, "Could not attach atexit handler");
 
 	if (argc < 2)
 		usage();
@@ -209,12 +209,12 @@ int main(int argc, char *argv[]) {
 			case ENOMEM:
 			case EMFILE:
 			case ENFILE:
-				exit(EX_OSERR);
+				err(EX_OSERR, "OS error");
 			case EROFS:
 			case ENOSPC:
-				exit(EX_CANTCREAT);
+				err(EX_CANTCREAT, "could not create file");
 			default:
-				exit(EX_NOINPUT);
+				err(EX_NOINPUT, "invalid input");
 			}
 		}
 	} else if (argc > optind) {
@@ -245,9 +245,9 @@ int main(int argc, char *argv[]) {
 			continue;
 		case EIO:
 		case ENOLCK:
-			exit(EX_OSERR);
+			err(EX_OSERR, "OS error");
 		default:
-			exit(EX_DATAERR);
+			err(EX_DATAERR, "data error");
 		}
 	}
 
