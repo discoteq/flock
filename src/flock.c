@@ -59,14 +59,7 @@
  * of the available operations, which must be added manually (see below
  * for the values).
  */
-
-/* this code has been reformatted by vixie */
-
-int
-flock(fd, operation)
-	int fd;
-	int operation;
-{
+static int flock(int fd, int operation) {
 	int i;
 
 	switch (operation) {
@@ -113,7 +106,7 @@ static inline void close_stdout(void) {
 	}
 }
 
-static void usage() {
+static void usage(void) {
 	fprintf(stderr, "\
 usage: %s [-suno] [-w secs] <file> <command> [<arguments>...]\n\
        %s [-suno] [-w secs] <file-descriptor-number>\n"
