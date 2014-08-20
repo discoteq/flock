@@ -28,7 +28,6 @@ AM_CFLAGS = \
 	-fno-common \
 	-Wall \
 	-Wextra \
-	-Wpedantic \
 	-Werror \
 	-Wmissing-declarations \
 	-Wmissing-prototypes \
