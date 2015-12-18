@@ -34,7 +34,6 @@ AM_CFLAGS = \
 	-Wredundant-decls \
 	-Wtype-limits \
 	-Wunused-parameter \
-	-Wunused-result \
 	-Wnested-externs \
 	-Wpointer-arith \
 	-Wstrict-prototypes \
