@@ -1,3 +1,5 @@
+#include <config.h>
+
 #ifdef S_SPLINT_S
 #define __x86_64__
 #endif
@@ -16,7 +18,7 @@
 #include <unistd.h>
 #include <stdbool.h>
 
-#ifndef HAVE_SYS_FILE_H
+#ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>
 #endif
 
