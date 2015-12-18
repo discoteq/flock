@@ -10,7 +10,7 @@ AC_CONFIG_MACRO_DIR([m4])
 dnl AC_USE_SYSTEM_EXTENSIONS must be called before any macros that run
 dnl the compiler (like AC_PROG_LIBTOOL) to avoid autoconf errors.
 AC_USE_SYSTEM_EXTENSIONS
-AM_INIT_AUTOMAKE([-Wall -Wno-portability foreign 1.14 tar-pax no-dist-gzip dist-xz subdir-objects])
+AM_INIT_AUTOMAKE([-Wall -Wno-portability foreign 1.14 tar-pax dist-xz subdir-objects])
 AM_SILENT_RULES([yes])
 AC_CONFIG_SRCDIR([src/flock.c])
 AC_REQUIRE_AUX_FILE([tap-driver.sh])
