@@ -1,6 +1,6 @@
 # ISC License
 
-Copyright (c) 2014, Joseph Anthony Pasquale Holsten <joseph@josephholsten.com>
+Copyright (c) 2014, 2015 Joseph Anthony Pasquale Holsten <joseph@josephholsten.com>
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted, provided that the above
