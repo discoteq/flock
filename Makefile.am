@@ -9,8 +9,8 @@
 RONN=ronn
 RONN_FLAGS=\
 	--manual="User Commands" \
-	--organization=dicoteq \
-	--date=2014-07-17
+	--organization=discoteq \
+	--date=2015-12-18
 OPEN=open
 GIT=git
 CPIO=cpio
