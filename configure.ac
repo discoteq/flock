@@ -31,6 +31,7 @@ AC_CHECK_HEADERS([ \
 	stdio.h \
 	stdlib.h \
 	string.h \
+	sys/file.h \
 	sys/time.h \
 	sysexits.h \
 	unistd.h \

@@ -16,6 +16,10 @@
 #include <unistd.h>
 #include <stdbool.h>
 
+#ifndef HAVE_SYS_FILE_H
+#include <sys/file.h>
+#endif
+
 #ifndef HAVE_FLOCK
 // lock operations for flock(2)
 #define	LOCK_SH		0x01		// shared file lock
@@ -187,7 +191,7 @@ int main(int argc, char *argv[]) {
 			open_flags = O_RDONLY | O_NOCTTY;
 			fd = open(filename, open_flags);
 		}
-		
+
 		if (fd < 0) {
 			warn("cannot open lock file %s", filename);
 			switch (errno) {
