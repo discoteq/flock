@@ -19,9 +19,10 @@ Mac OS X Homebrew:
 
 From source:
 
-    wget https://github.com/discoteq/flock/releases/download/v0.2.1/flock-0.2.1.tar.xz
-    xz -dc flock-0.2.1.tar.xz | tar x
-    cd flock-0.2.1
+    FLOCK_VERSION=0.2.2
+    wget https://github.com/discoteq/flock/releases/download/v${FLOCK_VERSION}/flock-${FLOCK_VERSION}.tar.xz
+    xz -dc flock-${FLOCK_VERSION}.tar.xz | tar -x
+    cd flock-${FLOCK_VERSION}
     ./configure
     make
     make install
