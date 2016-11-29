@@ -167,12 +167,11 @@ int main(int argc, char *argv[]) {
     { "wait",       required_argument,      NULL,           'w' },
     { "timeout",    required_argument,      NULL,           'w' },
     { "close",      no_argument,            NULL,           'o' },
-    { "command",    required_argument,      NULL,           'c' },
     { "help",       no_argument,            NULL,           'h' },
     { NULL,         0,                      NULL,           0 }
   };
 
-	while (-1 != (opt = getopt_long(argc, argv, "+suxeonwh:", longopts, NULL))) {
+	while (-1 != (opt = getopt_long(argc, argv, "+suxeonhw:", longopts, NULL))) {
 		switch (opt) {
 		case 'x':
 		case 'e':
@@ -210,6 +209,13 @@ int main(int argc, char *argv[]) {
 	if (argc - 1 > optind) {
 		// Run command with lockfile
 		filename = argv[optind];
+		if (!strncmp(argv[optind + 1], "-c", strlen("-c"))) {
+			if (argc - 2 > optind){
+				++optind;
+			} else {
+				usage();
+			}
+		}
 		cmd_argv = &argv[optind + 1];
 
 		// some systems allow exclusive locks on read-only files
