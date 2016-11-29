@@ -198,6 +198,7 @@ int main(int argc, char *argv[]) {
 			timer.it_value.tv_usec = (suseconds_t) ((raw_timeval - timer.it_value.tv_sec) * 1000000);
 			break;
 		case 'h':
+		case '?':
 		default:
 			usage();
 			// should not get here
