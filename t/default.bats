@@ -154,6 +154,16 @@ LOCKFILE=`mktemp -t flock.XXXXXXXXXX`
 	[ "$result" = 0.00 ]
 }
 
+# Ensure -c may be provided
+@test "-c may be provided" {
+	result=$(${FLOCK} ${LOCKFILE} -c echo run)
+	[ "$result" = run ]
+}
+
+# Ensure -c position correct if provided
+@test "-c must be provided after lock args and lockfile" {
+	${FLOCK} -c echo 1 ${LOCKFILE} || true
+}
 
 # special file types
 @test "lock on existing file" {
