@@ -12,6 +12,20 @@ LOCKFILE=`mktemp -t flock.XXXXXXXXXX`
 	[ "$result" = 0.05 ]
 }
 
+# explicit invocation with -x
+@test "-x behaves as exclusive" {
+	${FLOCK} -x ${LOCKFILE} sleep 0.05 &
+	result=$(${TIME} -p ${FLOCK} -x ${LOCKFILE} true 2>&1 | awk '/real/ {print $2}')
+	[ "$result" = 0.05 ]
+}
+
+# explicit invocation with --exclusive
+@test "--exclusive behaves as exclusive" {
+	${FLOCK} --exclusive ${LOCKFILE} sleep 0.05 &
+	result=$(${TIME} -p ${FLOCK} --exclusive ${LOCKFILE} true 2>&1 | awk '/real/ {print $2}')
+	[ "$result" = 0.05 ]
+}
+
 # -s uses a shared lock instead of exclusive
 @test "-s allows other shared locks" {
 	${FLOCK} -s ${LOCKFILE} sleep 0.05 &
@@ -20,6 +34,18 @@ LOCKFILE=`mktemp -t flock.XXXXXXXXXX`
 }
 @test "-s prevents exclusive locks" {
 	${FLOCK} -s ${LOCKFILE} sleep 0.05 &
+	result=$(${TIME} -p ${FLOCK} ${LOCKFILE} true 2>&1 | awk '/real/ {print $2}')
+	[ "$result" = 0.05 ]
+}
+
+# --shared uses a shared lock instead of exclusive
+@test "--shared allows other shared locks" {
+	${FLOCK} --shared ${LOCKFILE} sleep 0.05 &
+	result=$(${TIME} -p ${FLOCK} --shared ${LOCKFILE} true 2>&1 | awk '/real/ {print $2}')
+	[ "$result" = 0.00 ]
+}
+@test "--shared prevents exclusive locks" {
+	${FLOCK} --shared ${LOCKFILE} sleep 0.05 &
 	result=$(${TIME} -p ${FLOCK} ${LOCKFILE} true 2>&1 | awk '/real/ {print $2}')
 	[ "$result" = 0.05 ]
 }
@@ -48,6 +74,28 @@ LOCKFILE=`mktemp -t flock.XXXXXXXXXX`
 	[ "$result" = err ]
 }
 
+# --timeout sec waits for file to become unlocked, failing after timeout
+@test "--timeout runs command if the lock is released" {
+	${FLOCK} ${LOCKFILE} sleep 0.05 &
+	result=$(${FLOCK} --timeout 0.10 ${LOCKFILE} echo run || echo err)
+	[ "$result" = run ]
+}
+@test "--timeout fails if the lock isn't released in time" {
+	${FLOCK} ${LOCKFILE} sleep 0.10 &
+	result=$(${FLOCK} --timeout 0.05 ${LOCKFILE} echo run || echo err)
+	[ "$result" = err ]
+}
+@test "--timeout fails for zero time" {
+	${FLOCK} ${LOCKFILE} sleep 0.10 &
+	result=$(${FLOCK} --timeout 0.0 ${LOCKFILE} echo run || echo err)
+	[ "$result" = err ]
+}
+@test "--timeout fails for negative time" {
+	${FLOCK} ${LOCKFILE} sleep 0.10 &
+	result=$(${FLOCK} --timeout 0.0 ${LOCKFILE} echo run || echo err)
+	[ "$result" = err ]
+}
+
 # -n fails immediately if file is locked
 @test "-n fails if exclusive lock exists" {
 	${FLOCK} ${LOCKFILE} sleep 0.10 &
@@ -65,6 +113,23 @@ LOCKFILE=`mktemp -t flock.XXXXXXXXXX`
 	[ "$result" = run ]
 }
 
+# --nonblock fails immediately if file is locked
+@test "--nonblock fails if exclusive lock exists" {
+	${FLOCK} ${LOCKFILE} sleep 0.10 &
+	result=$(${FLOCK} --nonblock ${LOCKFILE} echo run || echo err)
+	[ "$result" = err ]
+}
+@test "--nonblock fails if shared lock exists" {
+	${FLOCK} -s ${LOCKFILE} sleep 0.10 &
+	result=$(${FLOCK} --nonblock ${LOCKFILE} echo run || echo err)
+	[ "$result" = err ]
+}
+@test "--nonblock succeeds if lock is absent" {
+	rm -f ${LOCKFILE}
+	result=$(${FLOCK} --nonblock ${LOCKFILE} echo run || echo err)
+	[ "$result" = run ]
+}
+
 # -u forcebly releases lock
 @test "-u unlocks existing exclusive lock" {
 	${FLOCK} ${LOCKFILE} sleep 0.10 &
@@ -75,6 +140,29 @@ LOCKFILE=`mktemp -t flock.XXXXXXXXXX`
 	${FLOCK} -s ${LOCKFILE} sleep 0.10 &
 	result=$(${TIME} -p ${FLOCK} -u ${LOCKFILE} true 2>&1 | awk '/real/ {print $2}')
 	[ "$result" = 0.00 ]
+}
+
+# --unlock forcebly releases lock
+@test "--unlock unlocks existing exclusive lock" {
+	${FLOCK} ${LOCKFILE} sleep 0.10 &
+	result=$(${TIME} -p ${FLOCK} --unlock ${LOCKFILE} true 2>&1 | awk '/real/ {print $2}')
+	[ "$result" = 0.00 ]
+}
+@test "--unlock unlocks existing shared lock" {
+	${FLOCK} -s ${LOCKFILE} sleep 0.10 &
+	result=$(${TIME} -p ${FLOCK} --unlock ${LOCKFILE} true 2>&1 | awk '/real/ {print $2}')
+	[ "$result" = 0.00 ]
+}
+
+# Ensure -c may be provided
+@test "-c may be provided" {
+	result=$(${FLOCK} ${LOCKFILE} -c echo run)
+	[ "$result" = run ]
+}
+
+# Ensure -c position correct if provided
+@test "-c must be provided after lock args and lockfile" {
+	${FLOCK} -c echo 1 ${LOCKFILE} || true
 }
 
 # special file types

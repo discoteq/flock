@@ -16,6 +16,7 @@
 #include <sys/wait.h>
 #include <sysexits.h>
 #include <unistd.h>
+#include <getopt.h>
 #include <stdbool.h>
 
 #ifdef HAVE_SYS_FILE_H
@@ -99,9 +100,22 @@ static inline void close_stdout(void) {
 
 static void usage(void) {
 	fprintf(stderr, "\
-usage: %s [-suno] [-w secs] <file> <command> [<arguments>...]\n\
-       %s [-suno] [-w secs] <file-descriptor-number>\n"
-		, progname, progname);
+Usage:\n\
+ %s [-sxun][-w #] fd#\n\
+ %s [-sxon][-w #] file [-c] command...\n\
+ %s [-sxon][-w #] directory [-c] command...\n\
+\n\
+Options:\n\
+ -s  --shared     Get a shared lock\n\
+ -x  --exclusive  Get an exclusive lock\n\
+ -u  --unlock     Remove a lock\n\
+ -n  --nonblock   Fail rather than wait\n\
+ -w  --timeout    Wait for a limited amount of time\n\
+ -o  --close      Close file descriptor before running command\n\
+ -c  --command    Run a single command string through the shell\n\
+ -h  --help       Display this text\n\
+ -V  --version    Display version\n"
+		,progname, progname, progname);
 	exit(EX_USAGE);
 }
 
@@ -143,8 +157,25 @@ int main(int argc, char *argv[]) {
 
 	memset(&timer, 0, sizeof timer);
 
-	while (-1 != (opt = getopt(argc, argv, "+suonw:"))) {
+  /* options descriptor */
+  static struct option longopts[] = {
+    { "exclusive",  no_argument,            NULL,           'x' },
+    { "shared",     no_argument,            NULL,           's' },
+    { "unlock",     no_argument,            NULL,           'u' },
+    { "nonblock",   no_argument,            NULL,           'n' },
+    { "nb",         no_argument,            NULL,           'n' },
+    { "wait",       required_argument,      NULL,           'w' },
+    { "timeout",    required_argument,      NULL,           'w' },
+    { "close",      no_argument,            NULL,           'o' },
+    { "help",       no_argument,            NULL,           'h' },
+    { NULL,         0,                      NULL,           0 }
+  };
+
+	while (-1 != (opt = getopt_long(argc, argv, "+suxeonhw:", longopts, NULL))) {
 		switch (opt) {
+		case 'x':
+		case 'e':
+			break;
 		case 's':
 			type = LOCK_SH;
 			break;
@@ -165,6 +196,7 @@ int main(int argc, char *argv[]) {
 			timer.it_value.tv_sec = (time_t) raw_timeval;
 			timer.it_value.tv_usec = (suseconds_t) ((raw_timeval - timer.it_value.tv_sec) * 1000000);
 			break;
+		case 'h':
 		case '?':
 		default:
 			usage();
@@ -177,6 +209,13 @@ int main(int argc, char *argv[]) {
 	if (argc - 1 > optind) {
 		// Run command with lockfile
 		filename = argv[optind];
+		if (!strncmp(argv[optind + 1], "-c", strlen("-c"))) {
+			if (argc - 2 > optind){
+				++optind;
+			} else {
+				usage();
+			}
+		}
 		cmd_argv = &argv[optind + 1];
 
 		// some systems allow exclusive locks on read-only files
