@@ -119,6 +119,11 @@ Options:\n\
 	exit(EX_USAGE);
 }
 
+static void version(void) {
+	printf("%s %s\n", progname, VERSION);
+	exit(EX_OK);
+}
+
 static bool timeout_expired = false;
 
 static void timeout_handler(int /*@unused@*/ sig __attribute__((__unused__))) {
@@ -168,10 +173,11 @@ int main(int argc, char *argv[]) {
     { "timeout",    required_argument,      NULL,           'w' },
     { "close",      no_argument,            NULL,           'o' },
     { "help",       no_argument,            NULL,           'h' },
+    { "version",    no_argument,            NULL,           'V' },
     { NULL,         0,                      NULL,           0 }
   };
 
-	while (-1 != (opt = getopt_long(argc, argv, "+suxeonhw:", longopts, NULL))) {
+	while (-1 != (opt = getopt_long(argc, argv, "+suxeonhw:V", longopts, NULL))) {
 		switch (opt) {
 		case 'x':
 		case 'e':
@@ -195,6 +201,9 @@ int main(int argc, char *argv[]) {
 				errx(EX_USAGE, "timeout must be greater than 0, was %f", raw_timeval);
 			timer.it_value.tv_sec = (time_t) raw_timeval;
 			timer.it_value.tv_usec = (suseconds_t) ((raw_timeval - timer.it_value.tv_sec) * 1000000);
+			break;
+		case 'V':
+			version();
 			break;
 		case 'h':
 		case '?':
