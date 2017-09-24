@@ -1,7 +1,7 @@
 flock(1)
 =======
 
-[flock(1)](man/flock.1.md) locks files
+**flock(1)** locks files
 
 ## The simplest thing that could possibly work
 
