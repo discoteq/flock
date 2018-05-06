@@ -1,0 +1,8 @@
+#!/bin/sh
+
+if ! [ -e Makefile ]; then
+        echo "Makefile not found, have you run \`script/bootstrap\`?"
+        exit 1
+fi
+
+make check
