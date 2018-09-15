@@ -101,20 +101,22 @@ static inline void close_stdout(void) {
 static void usage(void) {
 	fprintf(stderr, "\
 Usage:\n\
- %s [-sxun][-w #] fd#\n\
- %s [-sxon][-w #] file [-c] command...\n\
- %s [-sxon][-w #] directory [-c] command...\n\
+ %s [-sxun][-w #][-E #] fd#\n\
+ %s [-sxon][-w #][-E #] file [-c] command...\n\
+ %s [-sxon][-w #][-E #] directory [-c] command...\n\
 \n\
 Options:\n\
- -s  --shared     Get a shared lock\n\
- -x  --exclusive  Get an exclusive lock\n\
- -u  --unlock     Remove a lock\n\
- -n  --nonblock   Fail rather than wait\n\
- -w  --timeout    Wait for a limited amount of time\n\
- -o  --close      Close file descriptor before running command\n\
- -c  --command    Run a single command string through the shell\n\
- -h  --help       Display this text\n\
- -V  --version    Display version\n"
+ -s --shared     Get a shared lock\n\
+ -x --exclusive  Get an exclusive lock (or -e)\n\
+ -u --unlock     Remove a lock\n\
+ -n --nonblock   Fail rather than wait (or --nb)\n\
+ -w --timeout    Wait for a limited amount of time\n\
+ -o --close      Close file descriptor before running command\n\
+ -c --command    Run a single command string through the shell\n\
+ -h --help       Display this text\n\
+ -V --version    Display version\n\
+ -E --conflict-exit-code\n\
+    --verbose    Increase verbosity\n"
 		,progname, progname, progname);
 	exit(EX_USAGE);
 }
