@@ -17,7 +17,7 @@ manner similar to su(1) or newgrp(1). It locks a specified file or
 directory, which is created (assuming appropriate permissions), if it
 does not already exist.  By default, if the lock cannot be immediately
 acquired, **flock** waits until the lock is available.  By default,
-	**flock** uses an an exclusive lock, sometimes called a write lock.
+**flock** uses an an exclusive lock, sometimes called a write lock.
 
 
 The second form uses open file by file descriptor number.  See **EXAMPLES**
@@ -25,47 +25,61 @@ for how that can be used.
 
 ## OPTIONS
 
-* `-s`:
-	Obtain a shared lock, sometimes called a read lock, instead of the
-	default exclusive lock.
-* `-o`:
-	Close the file descriptor on which the lock is held before executing
-	**command**. This is useful if **command** spawns a child process which
-	should not be holding the lock.
-* `-n`:
-	Fail rather than wait if the lock cannot be immediately acquired.
-* `-w` <seconds>:
-	Fail if the lock cannot be acquired within **seconds**. Decimal
-	fractional values are allowed.
-* `-u`:
-	Drop a lock.  This is usually not required, since a lock is
-	automatically dropped when the file is closed.  However, it may be
-	required in special cases, for example if the enclosed command group
-	may have forked a background process which should not be holding
-	the lock.
+  * `-e`,`-x`,`--exclusive`:
+    Obtain an exclusive lock, sometimes called a write  lock.   This
+    is the default.
 
+  * `-s`, `--shared`:
+    Obtain a shared lock, sometimes called a read lock, instead of the
+    default exclusive lock.
+
+  * `-o`, `--close`:
+    Close the file descriptor on which the lock is held before executing
+    **command**. This is useful if **command** spawns a child process which
+    should not be holding the lock.
+
+  * `-n`, `--nb`, `--nonblock`:
+    Fail rather than wait if the lock cannot be immediately acquired.
+
+  * `-w` <seconds>, `--timeout`:
+    Fail if the lock cannot be acquired within **seconds**. Decimal
+    fractional values are allowed.
+
+  * `-E`, `--conflict-exit-code`:
+    The exit code used when the -n option is in use,  and  the  conflicting
+    lock exists, or the -w option is in use, and the time‐out is reached.
+   The default value is 1.
+
+  * `-u`, `--unlock`:
+    Drop a lock.  This is usually not required, since a lock is
+    automatically dropped when the file is closed.  However, it may be
+    required in special cases, for example if the enclosed command group
+    may have forked a background process which should not be holding
+    the lock.
+
+  * `--verbose`
 
 ## EXAMPLES
 
 Lock `/tmp` while running the utility `cat`:
 
-		flock /tmp cat
+      flock /tmp cat
 
 Lock `local-lock-file` exclusively while running the utility `echo` with `'a b c'`.
 
-		flock local-lock-file echo 'a b c'
+      flock local-lock-file echo 'a b c'
 
 Set exclusive lock to directory `/tmp` and the second command will fail.
 
-		flock -w .007 /tmp echo; /bin/echo $?
-		flock -s /tmp -c cat
+      flock -w .007 /tmp echo; /bin/echo $?
+      flock -s /tmp -c cat
 
 Set shared lock to directory `/tmp` and the second command will not fail.
 Notice that attempting to get exclusive lock with second command
 would fail.
 
-		flock -s -w .007 /tmp -c echo; /bin/echo $?
-		flock -s /tmp -c cat
+      flock -s -w .007 /tmp -c echo; /bin/echo $?
+      flock -s /tmp -c cat
 
 This is useful boilerplate code for shell scripts.  Put it at the top of
 the shell script you want to lock and it'll automatically lock itself on
@@ -75,7 +89,7 @@ lock (using the script itself as the lock file) before re-execing itself
 with the right arguments.  It also sets `FLOCKER` to the right value so
 it doesn't run again.
 
-		[ "${FLOCKER}" != "$0" ] && exec env FLOCKER="$0" flock -n "$0" "$0" "$@" || :
+      [ "${FLOCKER}" != "$0" ] && exec env FLOCKER="$0" flock -n "$0" "$0" "$@" || :
 
 Using a file descriptor with a shell block is useful for locking
 critical regions inside shell scripts. If the shell process has
@@ -84,10 +98,10 @@ be created if it does not exist. If the process only has read
 permission, `<` allows the file to already exist but only read
 permission is required.
 
-		(
-				flock -n 8 || exit 1
-				# commands executed under lock ...
-		) 8> /var/lock/mylockfile
+      (
+            flock -n 8 || exit 1
+            # commands executed under lock ...
+      ) 8> /var/lock/mylockfile
 
 ## EXIT STATUS
 
