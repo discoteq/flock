@@ -181,6 +181,7 @@ int main(int argc, char *argv[]) {
 		switch (opt) {
 		case 'x':
 		case 'e':
+			type = LOCK_EX;
 			break;
 		case 's':
 			type = LOCK_SH;
