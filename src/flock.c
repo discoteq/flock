@@ -101,20 +101,22 @@ static inline void close_stdout(void) {
 static void usage(void) {
 	fprintf(stderr, "\
 Usage:\n\
- %s [-sxun][-w #] fd#\n\
- %s [-sxon][-w #] file [-c] command...\n\
- %s [-sxon][-w #] directory [-c] command...\n\
+ %s [-sxun][-w #][-E #] fd#\n\
+ %s [-sxon][-w #][-E #] file [-c] command...\n\
+ %s [-sxon][-w #][-E #] directory [-c] command...\n\
 \n\
 Options:\n\
- -s  --shared     Get a shared lock\n\
- -x  --exclusive  Get an exclusive lock\n\
- -u  --unlock     Remove a lock\n\
- -n  --nonblock   Fail rather than wait\n\
- -w  --timeout    Wait for a limited amount of time\n\
- -o  --close      Close file descriptor before running command\n\
- -c  --command    Run a single command string through the shell\n\
- -h  --help       Display this text\n\
- -V  --version    Display version\n"
+ -s --shared     Get a shared lock\n\
+ -x --exclusive  Get an exclusive lock (or -e)\n\
+ -u --unlock     Remove a lock\n\
+ -n --nonblock   Fail rather than wait (or --nb)\n\
+ -w --timeout    Wait for a limited amount of time\n\
+ -o --close      Close file descriptor before running command\n\
+ -c --command    Run a single command string through the shell\n\
+ -h --help       Display this text\n\
+ -V --version    Display version\n\
+ -E --conflict-exit-code\n\
+    --verbose    Increase verbosity\n"
 		,progname, progname, progname);
 	exit(EX_USAGE);
 }
@@ -134,9 +136,12 @@ int main(int argc, char *argv[]) {
 	int type = LOCK_EX; // -su
 
 	bool have_timeout = false; // -w
+	bool verbose = false; // --verbose
 	double raw_timeval;
+	int status_time_conflict = EXIT_FAILURE; // -E default to EXIT_FAILURE
 	struct itimerval timer, old_timer;
 	struct sigaction sa, old_sa;
+    struct timeval t_l_req, t_l_acq; // verbose time lock request and acquire
 
 	int block = 0; // -n
 
@@ -171,13 +176,15 @@ int main(int argc, char *argv[]) {
     { "nb",         no_argument,            NULL,           'n' },
     { "wait",       required_argument,      NULL,           'w' },
     { "timeout",    required_argument,      NULL,           'w' },
+    { "conflict-exit-code",    required_argument,      NULL,           'E' },
     { "close",      no_argument,            NULL,           'o' },
     { "help",       no_argument,            NULL,           'h' },
     { "version",    no_argument,            NULL,           'V' },
+    { "verbose",    no_argument,            NULL,           'v' },
     { NULL,         0,                      NULL,           0 }
   };
 
-	while (-1 != (opt = getopt_long(argc, argv, "+suxeonhw:V", longopts, NULL))) {
+	while (-1 != (opt = getopt_long(argc, argv, "+suxeonhE:w:Vv", longopts, NULL))) {
 		switch (opt) {
 		case 'x':
 		case 'e':
@@ -203,8 +210,14 @@ int main(int argc, char *argv[]) {
 			timer.it_value.tv_sec = (time_t) raw_timeval;
 			timer.it_value.tv_usec = (suseconds_t) ((raw_timeval - timer.it_value.tv_sec) * 1000000);
 			break;
+		case 'E':
+			status_time_conflict = atoi(optarg);
+			break;
 		case 'V':
 			version();
+			break;
+		case 'v':
+			verbose=true;
 			break;
 		case 'h':
 		case '?':
@@ -235,6 +248,10 @@ int main(int argc, char *argv[]) {
 			open_flags = O_WRONLY | O_NOCTTY | O_CREAT;
 		}
 
+		if (verbose) {
+			gettimeofday(&t_l_req,NULL);
+			printf("flock: getting lock ");
+		}
 		fd = open(filename, open_flags, 0666);
 
 		// directories don't like O_WRONLY (and sometimes O_CREAT)
@@ -278,10 +295,10 @@ int main(int argc, char *argv[]) {
 	while (0 != flock(fd, type | block)) {
 		switch (errno) {
 		case EWOULDBLOCK: // non-blocking lock not available
-			exit(EXIT_FAILURE);
-		case EISDIR: // interrupted by signal
-			if (!timeout_expired) // failed to aquire lock in time
-				exit(EXIT_FAILURE);
+			exit(status_time_conflict);
+		case EINTR: // interrupted by signal
+			if (timeout_expired) // failed to acquire lock in time
+				exit(status_time_conflict);
 			continue;
 		case EIO:
 		case ENOLCK:
@@ -289,6 +306,10 @@ int main(int argc, char *argv[]) {
 		default:
 			err(EX_DATAERR, "data error");
 		}
+	}
+	if (verbose) {
+		gettimeofday(&t_l_acq,NULL);
+		printf("took %1u microseconds\n", (t_l_acq.tv_usec - t_l_req.tv_usec)); // not adding due to time constraints
 	}
 
 	if (have_timeout) {
@@ -300,7 +321,7 @@ int main(int argc, char *argv[]) {
 
 	if (cmd_argv) {
 		pid_t w, f;
-		// Clear any inheirited settings
+		// Clear any inherited settings
 		signal(SIGCHLD, SIG_DFL);
 		f = fork();
 
@@ -311,6 +332,8 @@ int main(int argc, char *argv[]) {
 				if (0 != close(fd))
 					err(EX_OSERR, "could not close file descriptor");
 
+			if (verbose)
+				printf("flock: executing %s\n", cmd_argv[0]);
 			if (0 != execvp(cmd_argv[0], cmd_argv)) {
 				warn("failed to execute command: %s", cmd_argv[0]);
 				switch(errno) {
