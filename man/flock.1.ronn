@@ -17,7 +17,7 @@ manner similar to su(1) or newgrp(1). It locks a specified file or
 directory, which is created (assuming appropriate permissions), if it
 does not already exist.  By default, if the lock cannot be immediately
 acquired, **flock** waits until the lock is available.  By default,
-**flock** uses an an exclusive lock, sometimes called a write lock.
+**flock** uses an exclusive lock, sometimes called a write lock.
 
 
 The second form uses open file by file descriptor number.  See **EXAMPLES**
