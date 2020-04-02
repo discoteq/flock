@@ -62,3 +62,17 @@ There's no wrong way to file a bug report, but I'll be able to help fastest if y
 * what actually happened
 
 (Some of the above was repurposed with <3 from logstash)
+
+## Supported Platforms
+
+Supporting a bunch of platforms is basically unlpeasant on purpose. To do it, we need to make sure that our dev dependencies work on all platforms.
+
+* Debian "stretch" 9.4](https://wiki.debian.org/DebianStretch)
+* CentOS [7.4.1708](https://wiki.centos.org/Manuals/ReleaseNotes/CentOS7.1708)
+- OmniOS [r151022](https://omnios.omniti.com/wiki.php/ReleaseNotes/r151022)
+- SmartOS 
+- macOS "High Sierra" 10.13.4
+- FreeBSD
+
+
+This info updated on 2018-05-06.
