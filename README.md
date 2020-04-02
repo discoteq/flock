@@ -19,7 +19,7 @@ Mac OS X Homebrew:
 
 From source:
 
-    FLOCK_VERSION=0.2.3
+    FLOCK_VERSION=0.3.0
     wget https://github.com/discoteq/flock/releases/download/v${FLOCK_VERSION}/flock-${FLOCK_VERSION}.tar.xz
     xz -dc flock-${FLOCK_VERSION}.tar.xz | tar -x
     cd flock-${FLOCK_VERSION}
