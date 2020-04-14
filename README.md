@@ -9,6 +9,10 @@ To exclusively lock `/tmp/my.lock` while running the utility
 `echo "hello, world!"`:
 
     flock /tmp/my.lock echo "hello, world!"
+    
+You can also use to run a single instance of rsync at a time - note: no need to escape double quotes
+
+    flock -n /tmp/my-lock.lock rsync -avr -e "ssh -p 22" "~/my path with spaces/" user@remote-host:/Documents/
 
 ## Installing
 
