@@ -1,5 +1,5 @@
 AC_INIT([flock],
-	[0.3.0],
+	[0.4.0],
 	[joseph@josephholsten.com],,
 	[https://github.com/josephholsten/flock])
 

@@ -9,7 +9,7 @@ To exclusively lock `/tmp/my.lock` while running the utility
 `echo "hello, world!"`:
 
     flock /tmp/my.lock echo "hello, world!"
-    
+
 You can also use to run a single instance of rsync at a time - note: no need to escape double quotes
 
     flock -n /tmp/my-lock.lock rsync -avr -e "ssh -p 22" "~/my path with spaces/" user@remote-host:/Documents/
@@ -23,7 +23,7 @@ Mac OS X Homebrew:
 
 From source:
 
-    FLOCK_VERSION=0.3.0
+    FLOCK_VERSION=0.4.0
     wget https://github.com/discoteq/flock/releases/download/v${FLOCK_VERSION}/flock-${FLOCK_VERSION}.tar.xz
     xz -dc flock-${FLOCK_VERSION}.tar.xz | tar -x
     cd flock-${FLOCK_VERSION}
