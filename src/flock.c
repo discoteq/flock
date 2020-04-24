@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <stdbool.h>
+#include <paths.h>
 
 #ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>
@@ -149,7 +150,7 @@ int main(int argc, char *argv[]) {
 
 	// lockfile+cmd vs fd
 	const char *filename = NULL;
-	char **cmd_argv = NULL;
+	char **cmd_argv = NULL, *sh_c_argv[4];
 	int fd = -1;
 
 	// internal state
@@ -230,16 +231,26 @@ int main(int argc, char *argv[]) {
 
 
 	if (argc - 1 > optind) {
-		// Run command with lockfile
-		filename = argv[optind];
-		if (!strncmp(argv[optind + 1], "-c", strlen("-c"))) {
-			if (argc - 2 > optind){
-				++optind;
-			} else {
-				usage();
-			}
+		/* Run command */
+		if (!strcmp(argv[optind + 1], "-c") ||
+		    !strcmp(argv[optind + 1], "--command")) {
+			if (argc != optind + 3)
+				errx(EX_USAGE,
+				     "%s requires exactly one command argument",
+				     argv[optind + 1]);
+			cmd_argv = sh_c_argv;
+			cmd_argv[0] = getenv("SHELL");
+			if (!cmd_argv[0] || !*cmd_argv[0])
+				cmd_argv[0] = _PATH_BSHELL;
+			cmd_argv[1] = "-c";
+			cmd_argv[2] = argv[optind + 2];
+			cmd_argv[3] = NULL;
+		} else {
+			cmd_argv = &argv[optind + 1];
 		}
-		cmd_argv = &argv[optind + 1];
+
+
+		filename = argv[optind];
 
 		// some systems allow exclusive locks on read-only files
 		if (LOCK_SH == type || 0 != access(filename, W_OK)) {
