@@ -27,7 +27,7 @@ From source:
     wget https://github.com/discoteq/flock/releases/download/v${FLOCK_VERSION}/flock-${FLOCK_VERSION}.tar.xz
     xz -dc flock-${FLOCK_VERSION}.tar.xz | tar -x
     cd flock-${FLOCK_VERSION}
-    ./configure
+    ./autogen.sh
     make
     make install
 
