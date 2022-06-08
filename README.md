@@ -20,6 +20,11 @@ On macOS using Homebrew:
 
     brew install discoteq/discoteq/flock
 
+On macOS using MacPorts:
+
+    port install flock
+
+
 From source:
 
     FLOCK_VERSION=0.4.0
