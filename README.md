@@ -18,7 +18,7 @@ You can also use to run a single instance of rsync at a time - note: no need to 
 
 On macOS using Homebrew:
 
-    brew install discoteq/discoteq/flock
+    brew install flock
 
 From source:
 
