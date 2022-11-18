@@ -1,0 +1,16 @@
+#!/bin/sh
+
+
+if ! command -v ronn > /dev/null; then
+        echo "ronn(1) not found, install with \`gem install ronn\`"
+        exit 1
+fi
+
+if ! command -v autoreconf > /dev/null; then
+        echo "autoreconf(1) not found, install with your system's \`autoconf\` package"
+        exit 1
+fi
+
+autoreconf --install --warnings=all
+
+./configure

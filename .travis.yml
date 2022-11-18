@@ -1,0 +1,6 @@
+---
+language: c
+script:
+        - gem install ronn
+        - ./script/bootstrap
+        - ./script/test
