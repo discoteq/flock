@@ -320,7 +320,7 @@ int main(int argc, char *argv[]) {
 	}
 	if (verbose) {
 		gettimeofday(&t_l_acq,NULL);
-		printf("took %1u microseconds\n", (t_l_acq.tv_usec - t_l_req.tv_usec)); // not adding due to time constraints
+		printf("took %1lu microseconds\n", (unsigned long) (t_l_acq.tv_usec - t_l_req.tv_usec)); // not adding due to time constraints
 	}
 
 	if (have_timeout) {
