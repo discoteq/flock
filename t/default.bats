@@ -618,6 +618,16 @@ get_elapsed() {
 	[[ "$result" == *"microseconds"* ]]
 }
 
+@test "--verbose in fd mode reports sane timing" {
+	# Regression: t_l_req was uninitialized in FD mode, producing
+	# garbage like "took 1774858164251193 microseconds"
+	result=$( (${FLOCK} --verbose 8) 8> ${LOCKFILE} 2>&1 )
+	[[ "$result" == *"microseconds"* ]]
+	# Extract the number and verify it's under 1 second (1000000 us)
+	elapsed=$(echo "$result" | grep -o '[0-9]* microseconds' | grep -o '[0-9]*')
+	[ "$elapsed" -lt 1000000 ]
+}
+
 ###############################################################################
 # Lock is released when holder exits
 ###############################################################################

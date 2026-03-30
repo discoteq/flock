@@ -265,10 +265,8 @@ int main(int argc, char *argv[]) {
 			open_flags = O_WRONLY | O_NOCTTY | O_CREAT;
 		}
 
-		if (verbose) {
-			gettimeofday(&t_l_req, NULL);
+		if (verbose)
 			printf("flock: getting lock\n");
-		}
 		fd = open(filename, open_flags, 0666);
 
 		// directories don't like O_WRONLY (and sometimes O_CREAT)
@@ -313,6 +311,9 @@ int main(int argc, char *argv[]) {
 		if (0 != setitimer(ITIMER_REAL, &timer, &old_timer))
 			err(EX_OSERR, "could not set interval timer");
 	}
+
+	if (verbose)
+		gettimeofday(&t_l_req, NULL);
 
 	while (0 != flock(fd, type | block)) {
 		switch (errno) {
