@@ -17,6 +17,7 @@
 #include <sysexits.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <paths.h>
 
@@ -61,13 +62,13 @@ static int flock(int fd, int operation) {
 
 	switch (operation) {
 	case LOCK_UN:
-		fl.l_type |= F_UNLCK;
+		fl.l_type = F_UNLCK;
 		break;
 	case LOCK_SH:
-		fl.l_type |= F_RDLCK;
+		fl.l_type = F_RDLCK;
 		break;
 	case LOCK_EX:
-		fl.l_type |= F_WRLCK;
+		fl.l_type = F_WRLCK;
 		break;
 	default:
 		errno = EINVAL;
@@ -99,8 +100,9 @@ static inline void close_stdout(void) {
 	}
 }
 
-static void usage(void) {
-	fprintf(stderr, "\
+static void usage(int status) {
+	FILE *out = status == EX_OK ? stdout : stderr;
+	fprintf(out, "\
 Usage:\n\
  %s [-sxun][-w #][-E #] fd#\n\
  %s [-sxon][-w #][-E #] file [-c] command...\n\
@@ -119,7 +121,7 @@ Options:\n\
  -E --conflict-exit-code\n\
     --verbose    Increase verbosity\n"
 		,progname, progname, progname);
-	exit(EX_USAGE);
+	exit(status);
 }
 
 static void version(void) {
@@ -142,7 +144,7 @@ int main(int argc, char *argv[]) {
 	int status_time_conflict = EXIT_FAILURE; // -E default to EXIT_FAILURE
 	struct itimerval timer, old_timer;
 	struct sigaction sa, old_sa;
-    struct timeval t_l_req, t_l_acq; // verbose time lock request and acquire
+	struct timeval t_l_req, t_l_acq; // verbose time lock request and acquire
 
 	int block = 0; // -n
 
@@ -164,26 +166,25 @@ int main(int argc, char *argv[]) {
 		err(EX_OSERR, "Could not attach atexit handler");
 
 	if (argc < 2)
-		usage();
+		usage(EX_USAGE);
 
 	memset(&timer, 0, sizeof timer);
 
-  /* options descriptor */
-  static struct option longopts[] = {
-    { "exclusive",  no_argument,            NULL,           'x' },
-    { "shared",     no_argument,            NULL,           's' },
-    { "unlock",     no_argument,            NULL,           'u' },
-    { "nonblock",   no_argument,            NULL,           'n' },
-    { "nb",         no_argument,            NULL,           'n' },
-    { "wait",       required_argument,      NULL,           'w' },
-    { "timeout",    required_argument,      NULL,           'w' },
-    { "conflict-exit-code",    required_argument,      NULL,           'E' },
-    { "close",      no_argument,            NULL,           'o' },
-    { "help",       no_argument,            NULL,           'h' },
-    { "version",    no_argument,            NULL,           'V' },
-    { "verbose",    no_argument,            NULL,           'v' },
-    { NULL,         0,                      NULL,           0 }
-  };
+	static struct option longopts[] = {
+		{ "exclusive",          no_argument,       NULL, 'x' },
+		{ "shared",             no_argument,       NULL, 's' },
+		{ "unlock",             no_argument,       NULL, 'u' },
+		{ "nonblock",           no_argument,       NULL, 'n' },
+		{ "nb",                 no_argument,       NULL, 'n' },
+		{ "wait",               required_argument, NULL, 'w' },
+		{ "timeout",            required_argument, NULL, 'w' },
+		{ "conflict-exit-code", required_argument, NULL, 'E' },
+		{ "close",              no_argument,       NULL, 'o' },
+		{ "help",               no_argument,       NULL, 'h' },
+		{ "version",            no_argument,       NULL, 'V' },
+		{ "verbose",            no_argument,       NULL, 'v' },
+		{ NULL,                 0,                 NULL,  0  }
+	};
 
 	while (-1 != (opt = getopt_long(argc, argv, "+suxeonhE:w:Vv", longopts, NULL))) {
 		switch (opt) {
@@ -211,9 +212,15 @@ int main(int argc, char *argv[]) {
 			timer.it_value.tv_sec = (time_t) raw_timeval;
 			timer.it_value.tv_usec = (suseconds_t) ((raw_timeval - timer.it_value.tv_sec) * 1000000);
 			break;
-		case 'E':
-			status_time_conflict = atoi(optarg);
+		case 'E': {
+			char *endptr;
+			errno = 0;
+			long val = strtol(optarg, &endptr, 10);
+			if (errno != 0 || endptr == optarg || *endptr != '\0' || val < 0 || val > 255)
+				errx(EX_USAGE, "conflict exit code must be 0-255, was '%s'", optarg);
+			status_time_conflict = (int)val;
 			break;
+		}
 		case 'V':
 			version();
 			break;
@@ -221,14 +228,14 @@ int main(int argc, char *argv[]) {
 			verbose=true;
 			break;
 		case 'h':
+			usage(EX_OK);
+			break;
 		case '?':
 		default:
-			usage();
-			// should not get here
+			usage(EX_USAGE);
 			break;
 		}
 	}
-
 
 	if (argc - 1 > optind) {
 		/* Run command */
@@ -249,7 +256,6 @@ int main(int argc, char *argv[]) {
 			cmd_argv = &argv[optind + 1];
 		}
 
-
 		filename = argv[optind];
 
 		// some systems allow exclusive locks on read-only files
@@ -260,8 +266,8 @@ int main(int argc, char *argv[]) {
 		}
 
 		if (verbose) {
-			gettimeofday(&t_l_req,NULL);
-			printf("flock: getting lock ");
+			gettimeofday(&t_l_req, NULL);
+			printf("flock: getting lock\n");
 		}
 		fd = open(filename, open_flags, 0666);
 
@@ -287,7 +293,12 @@ int main(int argc, char *argv[]) {
 		}
 	} else if (argc > optind) {
 		// Use provided file descriptor
-		fd = (int)strtol(argv[optind], NULL, 10);
+		char *endptr;
+		errno = 0;
+		long fdval = strtol(argv[optind], &endptr, 10);
+		if (errno != 0 || endptr == argv[optind] || *endptr != '\0' || fdval < 0 || fdval > INT_MAX)
+			errx(EX_USAGE, "bad file descriptor: %s", argv[optind]);
+		fd = (int)fdval;
 	} else {
 		// not enough parameters
 		errx(EX_USAGE, "requires a file path, directory path, or file descriptor");
@@ -298,9 +309,9 @@ int main(int argc, char *argv[]) {
 		sa.sa_handler = timeout_handler;
 		sa.sa_flags = SA_RESETHAND;
 		if (0 != sigaction(SIGALRM, &sa, &old_sa))
-				err(EX_OSERR, "could not attach timeout handler");
+			err(EX_OSERR, "could not attach timeout handler");
 		if (0 != setitimer(ITIMER_REAL, &timer, &old_timer))
-				err(EX_OSERR, "could not set interval timer");
+			err(EX_OSERR, "could not set interval timer");
 	}
 
 	while (0 != flock(fd, type | block)) {
@@ -319,15 +330,17 @@ int main(int argc, char *argv[]) {
 		}
 	}
 	if (verbose) {
-		gettimeofday(&t_l_acq,NULL);
-		printf("took %1lu microseconds\n", (unsigned long) (t_l_acq.tv_usec - t_l_req.tv_usec)); // not adding due to time constraints
+		gettimeofday(&t_l_acq, NULL);
+		long elapsed_us = (t_l_acq.tv_sec - t_l_req.tv_sec) * 1000000L
+			+ (t_l_acq.tv_usec - t_l_req.tv_usec);
+		printf("took %ld microseconds\n", elapsed_us);
 	}
 
 	if (have_timeout) {
 		if (0 != setitimer(ITIMER_REAL, &old_timer, NULL))
-				err(EX_OSERR, "could not reset old interval timer");
+			err(EX_OSERR, "could not reset old interval timer");
 		if (0 != sigaction(SIGALRM, &old_sa, NULL))
-				err(EX_OSERR, "could not reattach old timeout handler");
+			err(EX_OSERR, "could not reattach old timeout handler");
 	}
 
 	if (cmd_argv) {
@@ -363,7 +376,7 @@ int main(int argc, char *argv[]) {
 			} while (w != f);
 
 			if (-1 == w)
-				err(EXIT_FAILURE, "waidpid failed");
+				err(EXIT_FAILURE, "waitpid failed");
 			else if (0 != WIFEXITED(status))
 				status = WEXITSTATUS(status);
 			else if (0 != WIFSIGNALED(status))
