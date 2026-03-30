@@ -57,7 +57,18 @@ for how that can be used.
     may have forked a background process which should not be holding
     the lock.
 
-  * `--verbose`
+  * `-c`, `--command`:
+    Run a single command string through the shell (via `$SHELL -c` or
+    `/bin/sh -c` if `$SHELL` is unset).
+
+  * `-h`, `--help`:
+    Display usage information and exit.
+
+  * `-V`, `--version`:
+    Display version information and exit.
+
+  * `--verbose`:
+    Print diagnostic information about lock acquisition timing.
 
 ## EXAMPLES
 
