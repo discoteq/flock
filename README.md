@@ -24,7 +24,6 @@ On macOS using MacPorts:
 
     port install flock
 
-
 From source:
 
     FLOCK_VERSION=0.4.0
@@ -34,6 +33,10 @@ From source:
     ./configure
     make
     make install
+
+To run the test suite, [bats-core](https://github.com/bats-core/bats-core) is required:
+
+    make check
 
 ## Wait, isn't there already a flock(1)?
 

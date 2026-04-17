@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        cc: [gcc, clang]
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y autoconf automake bats
+      - name: Bootstrap
+        run: autoreconf --force --install
+      - name: Configure
+        run: ./configure CC=${{ matrix.cc }}
+      - name: Build
+        run: make
+      - name: Test
+        run: make check
+      - name: Upload test logs
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: test-logs-linux-${{ matrix.cc }}
+          path: |
+            test-suite.log
+            t/*.log
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install dependencies
+        run: brew install automake bats-core
+      - name: Bootstrap
+        run: autoreconf --force --install
+      - name: Configure
+        run: ./configure
+      - name: Build
+        run: make
+      - name: Test
+        run: make check
+      - name: Upload test logs
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: test-logs-macos
+          path: |
+            test-suite.log
+            t/*.log
+
+  build-freebsd:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build and test on FreeBSD
+        uses: vmactions/freebsd-vm@v1
+        with:
+          usesh: true
+          prepare: |
+            pkg install -y autoconf automake bash bats-core
+          run: |
+            autoreconf --force --install
+            ./configure
+            make
+            make check
+      - name: Upload test logs
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: test-logs-freebsd
+          path: |
+            test-suite.log
+            t/*.log
+
+  build-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install dependencies
+        run: sudo gem install ronn-ng
+      - name: Build man page
+        run: |
+          ronn --manual="User Commands" --organization=discoteq --date=2015-12-18 -r man/flock.1.ronn
+          ronn --manual="User Commands" --organization=discoteq --date=2015-12-18 -5 man/flock.1.ronn
+      - name: Upload man pages
+        uses: actions/upload-artifact@v5
+        with:
+          name: man-pages
+          path: |
+            man/flock.1
+            man/flock.1.html
