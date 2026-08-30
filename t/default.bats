@@ -231,7 +231,7 @@ get_elapsed() {
 
 @test "-w succeeds if lock is released before timeout" {
 	${FLOCK} ${LOCKFILE} sleep 0.3 &
-	sleep 0.1
+	wait_for_lock
 	result=$(${FLOCK} -w 3 ${LOCKFILE} echo run || echo err)
 	[ "$result" = run ]
 }
@@ -250,14 +250,14 @@ get_elapsed() {
 
 @test "-w with fractional seconds works" {
 	${FLOCK} ${LOCKFILE} sleep 0.2 &
-	sleep 0.1
+	wait_for_lock
 	result=$(${FLOCK} -w 1.5 ${LOCKFILE} echo run || echo err)
 	[ "$result" = run ]
 }
 
 @test "--timeout succeeds if lock is released before timeout" {
 	${FLOCK} ${LOCKFILE} sleep 0.3 &
-	sleep 0.1
+	wait_for_lock
 	result=$(${FLOCK} --timeout 3 ${LOCKFILE} echo run || echo err)
 	[ "$result" = run ]
 }
