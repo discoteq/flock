@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <limits.h>
+#include <math.h>
 #include <stdbool.h>
 #include <paths.h>
 
@@ -204,14 +205,22 @@ int main(int argc, char *argv[]) {
 		case 'n':
 			block = LOCK_NB;
 			break;
-		case 'w':
+		case 'w': {
+			char *endptr;
+			errno = 0;
 			have_timeout = true;
-			raw_timeval = strtod(optarg, NULL);
-			if (0 >= raw_timeval)
-				errx(EX_USAGE, "timeout must be greater than 0, was %f", raw_timeval);
+			raw_timeval = strtod(optarg, &endptr);
+			if (errno == ERANGE || endptr == optarg || *endptr != '\0' ||
+			    !isfinite(raw_timeval) || raw_timeval <= 0)
+				errx(EX_USAGE, "timeout must be greater than 0, was '%s'", optarg);
 			timer.it_value.tv_sec = (time_t) raw_timeval;
 			timer.it_value.tv_usec = (suseconds_t) ((raw_timeval - timer.it_value.tv_sec) * 1000000);
+			// setitimer(2) disarms the timer when it_value is {0, 0};
+			// floor sub-µs positives to 1µs so -w is never a no-op
+			if (timer.it_value.tv_sec == 0 && timer.it_value.tv_usec == 0)
+				timer.it_value.tv_usec = 1;
 			break;
+		}
 		case 'E': {
 			char *endptr;
 			errno = 0;

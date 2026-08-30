@@ -248,6 +248,39 @@ get_elapsed() {
 	[ "$result" = err ]
 }
 
+@test "-w sub-microsecond value does not disarm timer" {
+	# Previously: truncation of sub-microsecond values to {0, 0}
+	# disarmed the timer, making -w a no-op on contended locks.
+	# The timer must fire within milliseconds, not wait for the holder.
+	hold_lock
+	result=$(get_elapsed ${FLOCK} -w 0.0000001 ${LOCKFILE} true)
+	was_immediate "$result"
+}
+
+@test "-w sub-microsecond value fails on contention" {
+	hold_lock
+	run ${FLOCK} -w 0.0000001 ${LOCKFILE} echo run
+	[ "$status" -ne 0 ]
+}
+
+@test "-w rejects nan" {
+	run ${FLOCK} -w nan ${LOCKFILE} echo run
+	[ "$status" -ne 0 ]
+	[[ "$output" == *"timeout must be greater than 0"* ]]
+}
+
+@test "-w rejects inf" {
+	run ${FLOCK} -w inf ${LOCKFILE} echo run
+	[ "$status" -ne 0 ]
+	[[ "$output" == *"timeout must be greater than 0"* ]]
+}
+
+@test "-w rejects trailing junk" {
+	run ${FLOCK} -w 1junk ${LOCKFILE} echo run
+	[ "$status" -ne 0 ]
+	[[ "$output" == *"timeout must be greater than 0"* ]]
+}
+
 @test "-w with fractional seconds works" {
 	${FLOCK} ${LOCKFILE} sleep 0.2 &
 	sleep 0.1
