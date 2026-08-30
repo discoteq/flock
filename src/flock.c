@@ -118,8 +118,8 @@ Options:\n\
  -c --command    Run a single command string through the shell\n\
  -h --help       Display this text\n\
  -V --version    Display version\n\
- -E --conflict-exit-code\n\
-    --verbose    Increase verbosity\n"
+ -E --conflict-exit-code  Set exit code on conflict (0-255)\n\
+ -v --verbose    Increase verbosity\n"
 		,progname, progname, progname);
 	exit(status);
 }

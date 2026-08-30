@@ -67,7 +67,7 @@ for how that can be used.
   * `-V`, `--version`:
     Display version information and exit.
 
-  * `--verbose`:
+  * `-v`, `--verbose`:
     Print diagnostic information about lock acquisition timing.
 
 ## EXAMPLES
