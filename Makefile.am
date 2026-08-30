@@ -61,8 +61,8 @@ man/flock.1: man/flock.1.ronn man/index.txt
 	elif [ -f $@ ]; then \
 		touch $@; \
 	else \
-		echo "Warning: ronn not found and no pre-built man page available" >&2; \
-		touch $@; \
+		echo "Error: ronn not found and no pre-built man/flock.1 available; install ronn to build docs" >&2; \
+		exit 1; \
 	fi
 man/flock.1.html: man/flock.1.ronn man/index.txt
 	@if command -v $(RONN) >/dev/null 2>&1; then \
